@@ -19,14 +19,22 @@ const ShopKeeperSchema = new mongoose.Schema({
             required: true
         },
         address: {
-            type: String
+            type: String,
+            default: null
         },
         services: {
             type: [String]
         },
         location: {
-            type: "Point",
-            coordinates: [Number]
+            type: {
+                type: String, 
+                enum: ["Point"], 
+                required: true
+            },
+            coordinates: {
+                type: [Number], 
+                required: true
+            }
         }
     },
     {timestamps: true},

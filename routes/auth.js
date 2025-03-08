@@ -1,14 +1,16 @@
 const express = require("express");
-
-
-const { testSignup } = require("../controller/Customer");
+const { handleCustomerSignup, handleCustomerlogin} = require("../controller/Customer");
+const { handleShopkeeperSignup, handleShopkeeperLogin} = require("../controller/Shopkeeper");
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-    res.end("Badmosh api");
-});
+router.post("/signup/customer", handleCustomerSignup);
 
-router.get("/test", testSignup);
+router.post("/login/customer", handleCustomerlogin);
+
+router.post("/signup/shopkeeper", handleShopkeeperSignup);
+
+router.post("/login/shopkeeper", handleShopkeeperLogin);
+
 
 module.exports = router;

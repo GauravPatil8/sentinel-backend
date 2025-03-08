@@ -1,6 +1,7 @@
 // Libraries
+require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 
 // Custom files
 const authRouter = require("./routes/auth");
@@ -13,10 +14,12 @@ const app = express();
 const PORT = 5000;
 
 // mongodb connection
-connectToMongo("mongodb://127.0.0.1:27017/sentinel").then(console.log("mongoDB connected"));
+connectToMongo(process.env.MONGO_URI).then(console.log("mongoDB connected"));
 
 
 // middleware (sort of)
+app.use(express.json());
+app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/print-request", printRouter);
 app.use("/api/document-history", historyRouter);
