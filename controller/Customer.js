@@ -4,7 +4,7 @@ async function testSignup(req, res){
     
     await Customer.create({
         name: "Gaurav",
-        email: "gauravpatil@gmail.com",
+        email: "gauravpatil@gmail.com", //dusri baar test karne ke liye email change karna
         password: "abc"
     });
 
