@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const PrintRequestSchema = new mongoose.Schema({
         user: { 
-            type: ObjectId, 
+            type:mongoose.Schema.Types.ObjectId, 
             ref: "User" 
         },
         shopkeeper: { 
-            type: ObjectId, 
+            type: mongoose.Schema.Types.ObjectId, // changed this for print - request api
             ref: "User" 
         }, 
         shareToken: String, //Optional (jab link share karenge, tab hoga use)
@@ -31,7 +31,10 @@ const PrintRequestSchema = new mongoose.Schema({
             enum: ["Pending", "Printed"], 
             default: "Pending" 
         },
-        createdAt: Date,
+        createdAt: { 
+            type: Date, 
+            default: Date.now 
+        },
         expiresAt: Date // For shareToken expiration
     },
     {timestamps: true}

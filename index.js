@@ -21,7 +21,7 @@ connectToMongo(process.env.MONGO_URI).then(console.log("mongoDB connected"));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRouter);
-app.use("/api/print-request", printRouter);
+app.use("/api/print-requests", printRouter);
 app.use("/api/document-history", historyRouter);
 
 
