@@ -25,27 +25,41 @@ async function handleCustomerSignup(req, res) {
 async function handleCustomerlogin(req, res) {
     const { email, password } = req.body;
     try {
-        if(!email || !password) return res.status(400).json({error: "Email and Password are required"});
+        if (!email || !password) return res.status(400).json({ error: "Email and Password are required" });
+
         const existingCustomer = await Customer.findOne({ email });
-        if(!existingCustomer) return res.status(400).json("Customer doesn't Exist");
-        
+        if (!existingCustomer) return res.status(400).json({ error: "Customer doesn't exist" });
+
         const isMatch = await bcrypt.compare(password, existingCustomer.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-        const token = jwt.sign({ id: existingCustomer._id }, process.env.JWT_SECRET);
+       // generating jwt token 
+        const token = jwt.sign(
+            { id: existingCustomer._id },
+            process.env.JWT_SECRET,  
+            { expiresIn: "1h" } 
+        );
 
         res.cookie("token", token, {
-            httpOnly: true, // Prevents access via JavaScript
-            sameSite: "Strict", // Prevents CSRF attacks
+            httpOnly: true, 
+            sameSite: "Strict",
             secure: true
         });
 
-        res.status(201).json({id: existingCustomer._id, name: existingCustomer.name, email: existingCustomer.email });
+        
+        res.status(200).json({
+            id: existingCustomer._id,
+            name: existingCustomer.name,
+            email: existingCustomer.email,
+            token: token  //token was needed to send the print - request 
+        });
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Server error" });
     }
 }
+
 module.exports = {
     handleCustomerSignup,
     handleCustomerlogin
