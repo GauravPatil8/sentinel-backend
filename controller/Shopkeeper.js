@@ -46,7 +46,11 @@ async function handleShopkeeperLogin(req, res) {
         const isMatch = await bcrypt.compare(password, existingShopkeeper.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-        const token = jwt.sign({ id: existingShopkeeper._id }, process.env.JWT_SECRET);
+        const token = jwt.sign(
+            { id: existingShopkeeper._id }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: "3h" } // Token expires in 3 hours
+        );
 
         res.cookie("token", token, {
             httpOnly: true, 
@@ -54,7 +58,12 @@ async function handleShopkeeperLogin(req, res) {
             secure: true 
         });
 
-        res.status(201).json({ id: existingShopkeeper._id, name: existingShopkeeper.name, email: existingShopkeeper.email });
+        res.status(200).json({ 
+            id: existingShopkeeper._id, 
+            name: existingShopkeeper.name, 
+            email: existingShopkeeper.email,
+            token: token  // Include token in response
+        });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }

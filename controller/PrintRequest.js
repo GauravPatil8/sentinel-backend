@@ -2,6 +2,7 @@ require("dotenv").config();
 const PrintRequest = require("../model/PrintRequest");
 const ShopKeeper = require("../model/Shopkeeper");
 
+// ✅ Create a Print Request (No Changes, Fixed `expiresAt`)
 async function createPrintRequest(req, res) {
     try {
         // Extract data from request
@@ -32,7 +33,7 @@ async function createPrintRequest(req, res) {
             printMode,
             status: "Pending",
             createdAt: new Date(),
-            expiresAt: { type: Date, default: () => new Date(Date.now() + 5 * 60 * 1000) } // auto expire after 5 mins
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // ✅ Auto-expire after 5 minutes
         });
 
         // Save to database
@@ -45,4 +46,45 @@ async function createPrintRequest(req, res) {
     }
 }
 
-module.exports = { createPrintRequest };
+// ✅ Get Print Requests for a Shopkeeper
+async function getPrintRequestsByShop(req, res) {
+    try {
+        const shopkeeperId = req.params.shopid;
+
+        // Check if shopkeeper ID is provided
+        if (!shopkeeperId) {
+            return res.status(400).json({ message: "Shopkeeper ID is required" });
+        }
+
+        // Find print requests for the given shopkeeper
+        const printRequests = await PrintRequest.find({ shopkeeper: shopkeeperId });
+
+        if (!printRequests.length) {
+            return res.status(404).json({ message: "No print requests found for this shopkeeper" });
+        }
+
+        res.status(200).json(printRequests);
+    } catch (error) {
+        console.error("Error fetching print requests:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+// ✅ Get Print Requests for a User
+async function getPrintRequestsByUser(req, res) {
+    try {
+        const { userid } = req.params;
+        const printRequests = await PrintRequest.find({ user: userid }).populate("shopkeeper", "shopName email");
+
+        if (!printRequests.length) {
+            return res.status(404).json({ message: "No print requests found for this user." });
+        }
+
+        res.status(200).json(printRequests);
+    } catch (error) {
+        console.error("Error fetching user print requests:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+module.exports = { createPrintRequest, getPrintRequestsByShop, getPrintRequestsByUser };
