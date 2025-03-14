@@ -4,15 +4,13 @@ const PrintRequest = require("../model/PrintRequest");
 
 async function createPrintRequest(req, res) {
     try{
-        const { customerId, shopkeeperId, encryptedData, fileNames, initialVector, customerPublicKey, pages, copies, printMode } = req.body;
-        console.log(req.body);
-        if (!customerId || !encryptedData || !pages || !copies) {
+        const { customerId, shopkeeperId, encryptedData, fileNames, pages, copies } = req.body;
+
+        if (!customerId || !encryptedData || !pages || !copies || !fileNames) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        
         const expiresAt = new Date();
-        const createdAt =  new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
         const printRequest = new PrintRequest({
@@ -20,14 +18,9 @@ async function createPrintRequest(req, res) {
             shopkeeper: shopkeeperId || null, 
             encryptedData,
             fileNames,
-            initialVector,
-            customerPublicKey,
-            shopPublicKey : null,
             pages,
             copies,
-            printMode,
             status: "Pending",
-            createdAt,
             expiresAt
         });
         await printRequest.save();
@@ -43,12 +36,11 @@ async function getPrintRequestsByShop(req, res) {
     try {
         const shopkeeperId = req.params.shopid;
 
-        // Check if shopkeeper ID is provided
+        
         if (!shopkeeperId) {
             return res.status(400).json({ message: "Shopkeeper ID is required" });
         }
 
-        // Find print requests for the given shopkeeper
         const printRequests = await PrintRequest.find({ shopkeeper: shopkeeperId });
 
         if (!printRequests.length) {
@@ -62,7 +54,6 @@ async function getPrintRequestsByShop(req, res) {
     }
 }
 
-// Get Print Requests for a User
 async function getPrintRequestsByUser(req, res) {
     try {
         const { userid } = req.params;

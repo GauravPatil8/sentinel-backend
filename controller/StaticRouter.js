@@ -12,13 +12,11 @@ async function getPrintDetails(req, res){
         }
 
         res.status(200).json({
+            customerId : printRequest.Customer,
             encryptedData: printRequest.encryptedData,
-            encryptedKey: printRequest.encryptedKey,
             fileNames: printRequest.fileNames,
             pages: printRequest.pages,
-            printMode: printRequest.printMode,
             copies: printRequest.copies,
-            fileNames: printRequest.fileNames
         });
 
     } catch(error) {

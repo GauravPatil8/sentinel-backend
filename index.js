@@ -3,17 +3,20 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const { createServer } = require("http"); 
 
 // Custom files
 const authRouter = require("./routes/auth");
 const printRouter = require("./routes/printRequest");
 const historyRouter = require("./routes/documentHistory");
 const staticRouter = require("./routes/staticRouter");
+const { initializeSocket } = require("./services/socketServices");
 const connectToMongo = require("./connect");
 
-// Code
+// Set-up
 const app = express();
 const PORT = 5000;
+const server = createServer(app);
 
 // mongodb connection
 connectToMongo(process.env.MONGO_URI).then(console.log("mongoDB connected"));
@@ -28,9 +31,7 @@ app.use("/", staticRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/print-requests", printRouter);
 app.use("/api/document-history", historyRouter);
-app.get("/test", (req, res) => {
-    res.render("index");
-});
 
+initializeSocket(server);
 
-app.listen(PORT, () => console.log(`Server started at port: http://localhost:${PORT}/`));
+server.listen(PORT, () => console.log(`Server started at port: http://localhost:${PORT}/`));

@@ -18,17 +18,6 @@ const PrintRequestSchema = new mongoose.Schema({
         type: [String],
         required: true
     },
-    initialVector: { 
-        type: String, // iv: inital vector
-        required: true
-    },
-    encryptedKey: { 
-        type: String,
-    },
-    shopPublicKey: { 
-        type: String, //null until they access link
-        default: null
-    },
     pages: {
         type: String,
         required: true
@@ -37,17 +26,10 @@ const PrintRequestSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    printMode: { 
-        type: String, 
-    },
     status: { 
         type: String, 
         enum: ["Pending", "Printed"],
         default: "Pending" 
-    },
-    createdAt: { 
-        type: Date, 
-        default: Date.now 
     },
     expiresAt: { 
         type: Date, // Auto-delete after expiry
