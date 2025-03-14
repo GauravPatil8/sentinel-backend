@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const PrintRequestSchema = new mongoose.Schema({
-    Customer: { 
+    customerId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Customer" 
     },
-    shopkeeper: { 
+    shopkeeperId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "ShopKeeper",
         default: null

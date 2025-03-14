@@ -12,7 +12,7 @@ async function getPrintDetails(req, res){
         }
 
         res.status(200).json({
-            customerId : printRequest.Customer,
+            customerId : printRequest.customerId,
             encryptedData: printRequest.encryptedData,
             fileNames: printRequest.fileNames,
             pages: printRequest.pages,
