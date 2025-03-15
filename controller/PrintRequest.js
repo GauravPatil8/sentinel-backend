@@ -56,7 +56,7 @@ async function getPrintRequestsByShop(req, res) {
 async function getPrintRequestsByUser(req, res) {
     try {
         const { userid } = req.params;
-        const printRequests = await PrintRequest.find({ user: userid }).populate("shopkeeper", "shopName email");
+        const printRequests = await PrintRequest.find({ user: userid }).populate("shopkeeperId", "shopName email");
 
         if (!printRequests.length) {
             return res.status(404).json({ message: "No print requests found for this user." });
