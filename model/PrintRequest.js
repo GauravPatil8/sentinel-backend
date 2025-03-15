@@ -10,10 +10,12 @@ const PrintRequestSchema = new mongoose.Schema({
         ref: "ShopKeeper",
         default: null
     }, 
-    encryptedData: { 
-        type: Buffer, 
-        required: true
-    },
+    encryptedFiles: [{  
+        data: { 
+            type: Buffer, 
+            required: true 
+        }
+    }],
     fileNames: {
         type: [String],
         required: true

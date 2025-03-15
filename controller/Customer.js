@@ -51,7 +51,7 @@ async function handleCustomerlogin(req, res) {
             id: existingCustomer._id,
             name: existingCustomer.name,
             email: existingCustomer.email,
-            token: token  //token was needed to send the print - request 
+            // token: token  //token was needed to send the print - request 
         });
 
     } catch (error) {

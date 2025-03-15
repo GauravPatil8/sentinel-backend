@@ -13,7 +13,7 @@ async function getPrintDetails(req, res){
 
         res.status(200).json({
             customerId : printRequest.customerId,
-            encryptedData: printRequest.encryptedData,
+            encryptedFiles: printRequest.encryptedFiles,
             fileNames: printRequest.fileNames,
             pages: printRequest.pages,
             copies: printRequest.copies,

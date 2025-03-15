@@ -4,26 +4,25 @@ const PrintRequest = require("../model/PrintRequest");
 
 async function createPrintRequest(req, res) {
     try{
-        const { customerId, shopkeeperId, encryptedData, fileNames, pages, copies } = req.body;
+        const { customerId, shopkeeperId, encryptedFiles, fileNames, pages, copies } = req.body;
 
-        if (!customerId || !encryptedData || !pages || !copies || !fileNames) {
+        if (!customerId || !encryptedFiles || !pages || !copies || !fileNames) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
-        const printRequest = new PrintRequest({
-            customer:customerId,
-            shopkeeper: shopkeeperId || null, 
-            encryptedData,
+        const printRequest = await PrintRequest.create({
+            customerId:customerId,
+            shopkeeperId: shopkeeperId || null, 
+            encryptedFiles,
             fileNames,
             pages,
             copies,
             status: "Pending",
             expiresAt
         });
-        await printRequest.save();
         res.status(201).json({ message: "Print request created", requestId: printRequest._id});
     } catch(err){
         console.error("Error: ", err);
@@ -94,54 +93,9 @@ async function getShareableLink(req, res){
     }
 };
 
-async function setShopkeeperKey(req, res){
-    try {
-        const { requestId, publicKey } = req.body;
-
-        if (!requestId || !publicKey) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
-
-        
-        const printRequest = await PrintRequest.findById(requestId);
-        if (!printRequest) {
-            return res.status(404).json({ message: "Print request not found" });
-        }
-
-        printRequest.shopPublicKey = publicKey;
-        await printRequest.save();
-
-        res.status(200).json({ message: "Shopkeeper public key stored successfully" });
-    } catch (error) {
-        console.error("Error storing public key:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-async function setEncryptedKey(req, res){
-    try{
-        const { requestId, encryptedKey } = req.body();
-
-        const printRequest = await PrintRequest.findById(requestId);
-
-        if(!printRequest){
-            return res.status(404).json({message: "Request Not Found"});
-        }
-
-        printRequest.encryptedKey = encryptedKey;
-        await printRequest.save()
-
-        res.status(200).json({message: "Key recieved"});
-    }catch(error){
-        console.log(error);
-        res.status(500).json({message: "Internal Server Error"});
-    }
-};
 module.exports = { 
     createPrintRequest, 
     getPrintRequestsByShop, 
     getPrintRequestsByUser, 
     getShareableLink,
-    setShopkeeperKey,
-    setEncryptedKey 
 };
