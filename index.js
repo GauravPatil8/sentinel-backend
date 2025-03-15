@@ -4,6 +4,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const { createServer } = require("http"); 
+const cors = require("cors");
 
 // Custom files
 const authRouter = require("./routes/auth");
@@ -20,6 +21,11 @@ const server = createServer(app);
 
 // mongodb connection
 connectToMongo(process.env.MONGO_URI).then(console.log("mongoDB connected"));
+
+app.use(cors({
+    origin: "*",
+    methods: ["POST", "GET"]
+}));
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(express.json());
