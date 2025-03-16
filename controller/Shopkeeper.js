@@ -62,6 +62,7 @@ async function handleShopkeeperLogin(req, res) {
             id: existingShopkeeper._id, 
             name: existingShopkeeper.name, 
             email: existingShopkeeper.email,
+            shopName: existingShopkeeper.shopName,
             token: token  // Include token in response
         });
     } catch (error) {

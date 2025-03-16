@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 async function handleCustomerSignup(req, res) {
-    
+    console.log("recieved signup req");
     const { name, email, password} = req.body;
 
     try {
@@ -13,7 +13,8 @@ async function handleCustomerSignup(req, res) {
         if(existingCustomer) return res.status(400).json({  error: "Customer already exists."});
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        await Customer.create({ name, email, password: hashedPassword});
+        const newCustomer = Customer({ name, email, password: hashedPassword});
+        await newCustomer.save();
 
         res.status(201).json({ message: "User created successfully" });
     } catch (error) {
@@ -23,6 +24,7 @@ async function handleCustomerSignup(req, res) {
 }
 
 async function handleCustomerlogin(req, res) {
+    console.log("Recieved login req", req.body.email);
     const { email, password } = req.body;
     try {
         if (!email || !password) return res.status(400).json({ error: "Email and Password are required" });
@@ -46,13 +48,14 @@ async function handleCustomerlogin(req, res) {
             secure: true
         });
 
-        
+        console.log("Login successfull");
         res.status(200).json({
             id: existingCustomer._id,
             name: existingCustomer.name,
             email: existingCustomer.email,
-            // token: token  //token was needed to send the print - request 
+            token: token  //token was needed to send the print - request 
         });
+
 
     } catch (error) {
         console.log(error);
