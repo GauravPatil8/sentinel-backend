@@ -13,10 +13,11 @@ async function getPrintDetails(req, res){
 
         res.status(200).json({
             customerId : printRequest.customerId,
-            encryptedFiles: printRequest.encryptedFiles,
-            fileNames: printRequest.fileNames,
+            filesInfo: printRequest.filesInfo,
             pages: printRequest.pages,
-            copies: printRequest.copies,
+            createdAt: printRequest.createdAt,
+            expiresAt: printRequest.expiresAt,
+            status: printRequest.status
         });
 
     } catch(error) {

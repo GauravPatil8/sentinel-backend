@@ -10,27 +10,23 @@ const PrintRequestSchema = new mongoose.Schema({
         ref: "ShopKeeper",
         default: null
     }, 
-    encryptedFiles: [{  
-        data: { 
-            type: Buffer, 
-            required: true 
-        }
-    }],
-    fileNames: {
-        type: [String],
-        required: true
-    },
+    filesInfo: [
+        {
+          id: { type: Number, required: true },
+          name: { type: String, required: true },
+          data: { type: Buffer, required: true },
+          pages: { type: Number, required: true },
+          size: { type: String, required: true },
+          copies: { type: Number, required: true }
+        },
+    ],
     pages: {
         type: String,
         required: true
     },
-    copies: {
-        type: Number,
-        required: true
-    },
     status: { 
         type: String, 
-        enum: ["Pending", "Printed"],
+        enum: ["Pending", "Approved", "Printed"],
         default: "Pending" 
     },
     expiresAt: { 

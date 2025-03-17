@@ -4,9 +4,9 @@ const PrintRequest = require("../model/PrintRequest");
 
 async function createPrintRequest(req, res) {
     try{
-        const { customerId, shopkeeperId, encryptedFiles, fileNames, pages, copies } = req.body;
+        const { customerId, shopkeeperId, filesInfo, pages } = req.body;
 
-        if (!customerId || !encryptedFiles || !pages || !copies || !fileNames) {
+        if (!customerId || !filesInfo || !pages ) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
@@ -16,10 +16,8 @@ async function createPrintRequest(req, res) {
         const printRequest = await PrintRequest.create({
             customerId:customerId,
             shopkeeperId: shopkeeperId || null, 
-            encryptedFiles,
-            fileNames,
+            filesInfo,
             pages,
-            copies,
             status: "Pending",
             expiresAt
         });
