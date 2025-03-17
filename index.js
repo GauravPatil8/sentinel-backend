@@ -23,8 +23,9 @@ const server = createServer(app);
 connectToMongo(process.env.MONGO_URI).then(console.log("mongoDB connected"));
 
 app.use(cors({
-    origin: "*",
-    methods: ["POST", "GET"]
+    origin: "http://localhost:3000",
+    methods: ["POST", "GET"],
+    credentials: true
 }));
 
 app.use(bodyParser.json({ limit: "50mb" }));

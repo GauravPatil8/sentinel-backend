@@ -45,7 +45,7 @@ async function handleCustomerlogin(req, res) {
         res.cookie("token", token, {
             httpOnly: true, 
             sameSite: "Strict",
-            secure: true
+            secure: false
         });
 
         console.log("Login successfull");

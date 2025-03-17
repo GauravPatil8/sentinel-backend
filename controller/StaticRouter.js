@@ -1,3 +1,4 @@
+const Customer = require("../model/Customer");
 const PrintRequest = require("../model/PrintRequest");
 const ShopKeeper = require("../model/Shopkeeper");
 async function getPrintDetails(req, res){
@@ -10,14 +11,18 @@ async function getPrintDetails(req, res){
         if(!printRequest){
             return res.status(400).json({message: "Request Not Found"});
         }
-
+        const customer = await Customer.findById(printRequest.customerId);
+        const customerName = customer.name;
+        console.log(customerName)
         res.status(200).json({
             customerId : printRequest.customerId,
+            ShopKeeperId: null,
             filesInfo: printRequest.filesInfo,
             pages: printRequest.pages,
             createdAt: printRequest.createdAt,
             expiresAt: printRequest.expiresAt,
-            status: printRequest.status
+            status: printRequest.status,
+            customerName: customerName || null
         });
 
     } catch(error) {
