@@ -1,63 +1,85 @@
 require("dotenv").config();
 const PrintRequest = require("../model/PrintRequest");
-const ShopKeeper = require("../model/Shopkeeper");
+const CryptoJS = require("crypto-js");
 
-// ✅ Create a Print Request (No Changes, Fixed `expiresAt`)
+// Function to generate AES Key & IV
+function generateAESKeyIV() {
+    return {
+        key: CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Base64), // 256-bit key
+        iv: CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Base64)   // 128-bit IV
+    };
+}
+
+// Function to encrypt file data
+function encryptFileData(fileBuffer, key, iv) {
+    const base64File = Buffer.from(fileBuffer).toString("base64"); // Convert buffer to Base64
+    const encrypted = CryptoJS.AES.encrypt(base64File, CryptoJS.enc.Base64.parse(key), { 
+        iv: CryptoJS.enc.Base64.parse(iv), 
+        mode: CryptoJS.mode.CBC 
+    });
+
+    return encrypted.toString();
+}
+
+// Create a print request with encrypted files
 async function createPrintRequest(req, res) {
     try {
-        // Extract data from request
-        const { shopkeeperId, pages, copies, printMode } = req.body;
-        const document = req.file; // Uploaded file
+        console.log("🔹 Received Request Data:", req.body); // Debugging
 
-        // Validate required fields
-        if (!shopkeeperId || !pages || !copies || !printMode || !document) {
-            return res.status(400).json({ message: "All fields are required." });
+        const { customerId, shopkeeperId, pages, copies, filesInfo } = req.body;
+
+        if (!customerId || !filesInfo || filesInfo.length === 0 || !pages || !copies) {
+            console.error("❌ Missing required fields");
+            return res.status(400).json({ message: "Missing required fields" });
         }
 
-        // Check if the shopkeeper exists
-        const shopkeeper = await ShopKeeper.findById(shopkeeperId);
-        if (!shopkeeper) {
-            return res.status(404).json({ message: "Shopkeeper not found" });
-        }
+        // Generate AES Key and IV
+        const { key, iv } = generateAESKeyIV();
 
-        // Create a print request
-        const printRequest = new PrintRequest({
-            user: req.user.id, // Extracted from JWT token in authMiddleware
-            shopkeeper: shopkeeperId,
-            document: {
-                data: document.buffer,
-                contentType: document.mimetype
-            },
+        // Encrypt files
+        const encryptedFiles = filesInfo.map(file => ({
+            id: file.id,
+            fileName: file.name,
+            encryptedData: encryptFileData(file.data, key, iv), // Encrypt file data
+            pages: file.pages,
+            size: file.size,
+            copies: file.copies
+        }));
+
+        // Set expiration time (5 minutes)
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+        const printRequest = await PrintRequest.create({
+            customerId,
+            shopkeeperId: shopkeeperId || null,
+            encryptedFiles,
             pages,
             copies,
-            printMode,
+            aesKey: key,
+            aesIV: iv,
             status: "Pending",
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // ✅ Auto-expire after 5 minutes
+            expiresAt
         });
 
-        // Save to database
-        await printRequest.save();
+        console.log("✅ Print request created:", printRequest);
+        res.status(201).json({ message: "Print request created", requestId: printRequest._id });
 
-        return res.status(201).json({ message: "Print request created successfully", printRequest });
-    } catch (error) {
-        console.error("Error creating print request:", error);
-        return res.status(500).json({ message: "Server error" });
+    } catch (err) {
+        console.error("🔥 Server Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 }
 
-// ✅ Get Print Requests for a Shopkeeper
+// Get print requests for a shopkeeper
 async function getPrintRequestsByShop(req, res) {
     try {
         const shopkeeperId = req.params.shopid;
-
-        // Check if shopkeeper ID is provided
         if (!shopkeeperId) {
             return res.status(400).json({ message: "Shopkeeper ID is required" });
         }
 
-        // Find print requests for the given shopkeeper
-        const printRequests = await PrintRequest.find({ shopkeeper: shopkeeperId });
+        const printRequests = await PrintRequest.find({ shopkeeperId });
 
         if (!printRequests.length) {
             return res.status(404).json({ message: "No print requests found for this shopkeeper" });
@@ -70,21 +92,54 @@ async function getPrintRequestsByShop(req, res) {
     }
 }
 
-// ✅ Get Print Requests for a User
+// Get print requests for a user
 async function getPrintRequestsByUser(req, res) {
     try {
         const { userid } = req.params;
-        const printRequests = await PrintRequest.find({ user: userid }).populate("shopkeeper", "shopName email");
+        console.log("Fetching print requests for user:", userid);
+
+        const printRequests = await PrintRequest.find({ customerId: userid })
+            .select("encryptedFiles.fileName status createdAt copies");
+
+        console.log("Print Requests Found:", printRequests);
 
         if (!printRequests.length) {
             return res.status(404).json({ message: "No print requests found for this user." });
         }
 
-        res.status(200).json(printRequests);
+        res.status(200).json({ printRequests });
     } catch (error) {
         console.error("Error fetching user print requests:", error);
         res.status(500).json({ message: "Server error" });
     }
 }
 
-module.exports = { createPrintRequest, getPrintRequestsByShop, getPrintRequestsByUser };
+// Generate a shareable link
+async function getShareableLink(req, res) {
+    try {
+        const { requestId } = req.params;
+        const printRequest = await PrintRequest.findById(requestId);
+
+        if (!printRequest) {
+            return res.status(400).json({ message: "Print request not found" });
+        }
+
+        printRequest.expiresAt = new Date();
+        printRequest.expiresAt.setMinutes(printRequest.expiresAt.getMinutes() + 5);
+        await printRequest.save();
+
+        const shareLink = `${req.protocol}://${req.get("host")}/share/${requestId}`;
+
+        res.json({ success: true, shareLink });
+    } catch (err) {
+        console.error("Error generating print link:", err);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+}
+
+module.exports = { 
+    createPrintRequest, 
+    getPrintRequestsByShop, 
+    getPrintRequestsByUser, 
+    getShareableLink
+};

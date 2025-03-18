@@ -37,37 +37,54 @@ async function handleShopkeeperSignup(req, res) {
 }
 
 async function handleShopkeeperLogin(req, res) {
+    console.log("Received login request for shopkeeper:", req.body.email);
     const { email, password } = req.body;
 
     try {
-        const existingShopkeeper = await ShopKeeper.findOne({email});
-        if(!existingShopkeeper) return res.status(400).json("Customer doesn't Exist");
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and Password are required" });
+        }
+
+        // Debugging: Fetch all shopkeepers
+        const allShopkeepers = await ShopKeeper.find({});
+        console.log("All Shopkeepers in DB:", allShopkeepers);
+
+        // Debugging: Check if shopkeeper exists
+        const existingShopkeeper = await ShopKeeper.findOne({ email });
+        console.log("Found Shopkeeper:", existingShopkeeper);
+
+        if (!existingShopkeeper) {
+            return res.status(400).json({ error: "Shopkeeper doesn't exist" });
+        }
 
         const isMatch = await bcrypt.compare(password, existingShopkeeper.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
 
         const token = jwt.sign(
-            { id: existingShopkeeper._id }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: "3h" } // Token expires in 3 hours
+            { id: existingShopkeeper._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "3h" }
         );
 
-        res.cookie("token", token, {
-            httpOnly: true, 
-            sameSite: "Strict",
-            secure: true 
-        });
-
-        res.status(200).json({ 
-            id: existingShopkeeper._id, 
-            name: existingShopkeeper.name, 
+        // Return all required details
+        const responseData = {
+            id: existingShopkeeper._id,
+            name: existingShopkeeper.name,
             email: existingShopkeeper.email,
-            token: token  // Include token in response
-        });
+            shopName: existingShopkeeper.shopName,
+            token: token
+        };
+
+        console.log("Sending Response:", responseData);
+        res.status(200).json(responseData);
     } catch (error) {
+        console.error("🔥 Server Error in Shopkeeper Login:", error);
         res.status(500).json({ message: "Server error" });
     }
 }
+
 module.exports = {
     handleShopkeeperSignup,
     handleShopkeeperLogin

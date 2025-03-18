@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure File Upload</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+
+    <!-- Signup Section -->
+    <div id="signupSection">
+        <h2>Signup</h2>
+        <form id="signupForm">
+            <input type="text" id="name" placeholder="Name" required><br>
+            <input type="email" id="email" placeholder="Email" required><br>
+            <input type="password" id="password" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p id="signupMessage"></p>
+        <p>Already have an account? <a href="#" id="switchToLogin">Log in</a></p>
+    </div>
+
+    <!-- Login Section (Hidden initially) -->
+    <div id="loginSection" style="display:none;">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required><br>
+            <input type="password" id="loginPassword" placeholder="Password" required><br>
+            <button type="submit">Log In</button>
+        </form>
+        <p id="loginMessage"></p>
+    </div>
+
+    <!-- Upload Section (Hidden initially) -->
+    <div id="uploadSection" style="display:none;">
+        <h2>Upload & Encrypt Document</h2>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" required><br>
+            <input type="text" id="pages" placeholder="Pages" required><br>
+            <input type="number" id="copies" placeholder="Copies" required><br>
+            <input type="text" id="printMode" placeholder="Print Mode (Color/B&W)" required><br>
+            <button type="submit">Encrypt & Upload</button>
+        </form>
+        <p id="uploadMessage"></p>
+    </div>
+
+    <script>
+        // Function to get JWT token from cookies
+        function getTokenFromCookies() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                let [key, value] = cookie.split('=');
+                key = key.trim();
+                if (key === "token") return value;
+            }
+            return null;
+        }
+
+        // Decode JWT token to extract customer ID
+        function getCustomerIdFromToken() {
+            console.log("function called");
+            const token = getTokenFromCookies();
+            console.log(token);
+            if (!token) return null;
+            try {
+                const payloadBase64 = token.split('.')[1]; // Extract payload
+                const decodedPayload = JSON.parse(atob(payloadBase64));
+                return decodedPayload.customerId; // Assuming customerId is in token payload
+            } catch (error) {
+                console.error("Error decoding token:", error);
+                return null;
+            }
+        }
+
+        // Switch to login if already signed up
+        document.getElementById("switchToLogin").addEventListener("click", function(event) {
+            event.preventDefault();
+            document.getElementById("signupSection").style.display = "none";
+            document.getElementById("loginSection").style.display = "block";
+        });
+
+        // Signup
+        document.getElementById("signupForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://localhost:5000/api/auth/signup/customer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password }),
+                credentials: "include" // Ensures cookies are set
+            });
+
+            const data = await response.json();
+            document.getElementById("signupMessage").innerText = data.message;
+
+            if (response.ok) {
+                document.getElementById("signupSection").style.display = "none";
+                document.getElementById("loginSection").style.display = "block";
+            }
+        });
+
+        // Login
+        document.getElementById("loginForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const response = await fetch("http://localhost:5000/api/auth/login/customer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+                credentials: "include" // Ensures token is stored in cookies
+            });
+
+            const data = await response.json();
+            document.getElementById("loginMessage").innerText = data.message;
+
+            if (response.ok) {
+                document.getElementById("loginSection").style.display = "none";
+                document.getElementById("uploadSection").style.display = "block";
+            }
+        });
+
+        // Encrypt file and upload
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const fileInput = document.getElementById("fileInput").files[0];
+    if (!fileInput) {
+        alert("Select a file first!");
+        return;
+    }
+
+    const customerId = '67d45df58588dd119d6f5f12'; // Fetch customer ID from token
+    if (!customerId) {
+        alert("You must log in first!");
+        return;
+    }
+
+    const pages = document.getElementById("pages").value;
+    const copies = document.getElementById("copies").value;
+    const printMode = document.getElementById("printMode").value;
+
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+        const fileData = event.target.result;
+        const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(fileData)); // Convert binary to WordArray
+        const secretKey = CryptoJS.lib.WordArray.random(32);  // Strong key
+        const iv = CryptoJS.lib.WordArray.random(16);  // IV for AES
+        const encrypted = CryptoJS.AES.encrypt(wordArray, secretKey, { iv: iv }).toString();
+
+        const response = await fetch("http://localhost:5000/api/print-requests", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ 
+                customerId, 
+                encryptedData: encrypted, 
+                fileNames: [fileInput.name], 
+                initialVector: CryptoJS.enc.Base64.stringify(iv), 
+                customerPublicKey: "some-public-key",  
+                pages, 
+                copies, 
+                printMode 
+            })
+        });
+
+        const data = await response.json();
+        document.getElementById("uploadMessage").innerText = data.message || data.error;
+    };
+
+    reader.readAsArrayBuffer(fileInput);  // Read file as binary data instead of Base64
+});
+
+        
+    </script>
+
+</body>
+</html>

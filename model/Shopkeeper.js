@@ -40,6 +40,7 @@ const ShopKeeperSchema = new mongoose.Schema({
     {timestamps: true},
 );
 
+ShopKeeperSchema.index({ location: '2dsphere' });
 const ShopKeeper = mongoose.model("ShopKeeper", ShopKeeperSchema);
 
 module.exports = ShopKeeper;

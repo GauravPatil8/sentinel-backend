@@ -1,45 +1,51 @@
 const mongoose = require("mongoose");
 
 const PrintRequestSchema = new mongoose.Schema({
-        user: { 
-            type:mongoose.Schema.Types.ObjectId, 
-            ref: "User" 
-        },
-        shopkeeper: { 
-            type: mongoose.Schema.Types.ObjectId, // changed this for print - request api
-            ref: "User" 
-        }, 
-        shareToken: String, //Optional (jab link share karenge, tab hoga use)
-        document: {
-            data: Buffer, 
-            contentType: String
-        },
-        pages: {
-            type: String,
-            required: true
-        },
-        copies: {
-            type: Number,
-            required: true
-        },
-        printMode: { 
-            type: String, 
-            enum: ["Color", "B&W"] 
-        },
-        status: { 
-            type: String, 
-            enum: ["Pending", "Printed"], 
-            default: "Pending" 
-        },
-        createdAt: { 
-            type: Date, 
-            default: Date.now 
-        },
-        expiresAt: Date // For shareToken expiration
+    customerId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Customer",
+        required: true
     },
-    {timestamps: true}
-);
+    shopkeeperId: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ShopKeeper",
+        default: null
+    }, 
+    encryptedFiles: [{  
+        id: { type: Number, required: true },  
+        fileName: { type: String, required: true },
+        encryptedData: { type: String, required: true },
+        pages: { type: Number, required: true }, 
+        size: { type: String, required: true }, 
+        copies: { type: Number, required: true } 
+    }],
+    filesInfo: [
+        {
+          id: { type: Number, required: true },
+          name: { type: String, required: true },
+          pages: { type: Number, required: true },
+          size: { type: String, required: true },
+          copies: { type: Number, required: true }
+        },
+    ],
+    aesKey: {   //  Store AES key for decryption
+        type: String,
+        required: true
+    },
+    aesIV: {    //  Store IV for decryption
+        type: String,
+        required: true
+    },
+    status: { 
+        type: String, 
+        enum: ["Pending", "Approved", "Printed"],
+        default: "Pending" 
+    },
+    expiresAt: { 
+        type: Date, // Auto-delete after expiry
+        required: true 
+    }
+}, { timestamps: true });
 
 const PrintRequest = mongoose.model("PrintRequest", PrintRequestSchema);
-
 module.exports = PrintRequest;
