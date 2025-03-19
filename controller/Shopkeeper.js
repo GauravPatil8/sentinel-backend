@@ -15,7 +15,7 @@ async function handleShopkeeperSignup(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
        
-        await ShopKeeper.create({
+        const newShopkeeper = await ShopKeeper({
             name,
             email,
             password: hashedPassword,
@@ -27,7 +27,19 @@ async function handleShopkeeperSignup(req, res) {
                 coordinates: location?.coordinates || [0, 0], 
             }
         });
+        await newShopkeeper.save();
 
+        const token = jwt.sign(
+            { id: newShopkeeper._id }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: "3h" } // Token expires in 3 hours
+        );
+
+        res.cookie("token", token, {
+            httpOnly: true, 
+            sameSite: "Strict",
+            secure: true 
+        });
         res.status(201).json({ message: "User registered successfully" });
 
     } catch (error) {

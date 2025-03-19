@@ -15,6 +15,17 @@ async function handleCustomerSignup(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newCustomer = Customer({ name, email, password: hashedPassword});
         await newCustomer.save();
+        const token = jwt.sign(
+            { id: newCustomer._id },
+            process.env.JWT_SECRET,  
+            { expiresIn: "1h" } 
+        );
+        console.log(token);
+        res.cookie("token", token, {
+            httpOnly: true, 
+            sameSite: "Strict",
+            secure: false
+        });
 
         res.status(201).json({ message: "User created successfully" });
     } catch (error) {
