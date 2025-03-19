@@ -12,7 +12,7 @@ const PrintRequestSchema = new mongoose.Schema({
         default: null
     }, 
     encryptedFiles: [{  
-        id: { type: Number, required: true },  
+        
         fileName: { type: String, required: true },
         encryptedData: { type: String, required: true },
         pages: { type: Number, required: true }, 
@@ -30,11 +30,11 @@ const PrintRequestSchema = new mongoose.Schema({
     ],
     aesKey: {   //  Store AES key for decryption
         type: String,
-        required: true
+        required: false
     },
     aesIV: {    //  Store IV for decryption
         type: String,
-        required: true
+        required: false
     },
     status: { 
         type: String, 

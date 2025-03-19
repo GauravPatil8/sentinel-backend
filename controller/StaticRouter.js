@@ -25,30 +25,31 @@ async function getPrintDetails(req, res){
     }
 };
 
-async function getNearByShops(req, res){
+async function getNearByShops(req, res) {
     try {
-        const { lat, lng, maxDistance = 5000 } = req.query;
+        const { lat, lng, maxDistance = 2000 } = req.query; // Default maxDistance set to 2000 meters (2 km)
 
+        // Validate latitude and longitude
         if (!lat || !lng) {
             return res.status(400).json({ error: "Latitude and Longitude are required." });
         }
 
+        // Perform geospatial query to find nearby shopkeepers
         const nearbyShopkeepers = await ShopKeeper.find({
             location: {
                 $near: {
                     $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-                    $maxDistance: parseInt(maxDistance)
+                    $maxDistance: parseInt(maxDistance)  // maxDistance is in meters
                 }
             }
         });
 
+        // Send response with nearby shopkeepers
         res.status(200).json(nearbyShopkeepers);
     } catch (error) {
         console.error("Error fetching shopkeepers:", error);
         res.status(500).json({ error: error.message });
     }
-
-    
 };
 module.exports = {
     getPrintDetails,

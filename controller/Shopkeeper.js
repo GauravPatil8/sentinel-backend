@@ -7,25 +7,33 @@ async function handleShopkeeperSignup(req, res) {
     const { name, email, password, shopName, address, services, location } = req.body;
 
     try {
-        if(!email || !password || !name || !shopName) return res.status(400).json({error: "Fields are required"});
-        const existingShopKeeper = await ShopKeeper.findOne({ email });
-        if (existingShopKeeper) return res.status(400).json({ message: "Email already in use" });
+        if (!email || !password || !name || !shopName) {
+            return res.status(400).json({ error: "Fields are required" });
+        }
 
-        
+        const existingShopKeeper = await ShopKeeper.findOne({ email });
+        if (existingShopKeeper) {
+            return res.status(400).json({ message: "Email already in use" });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-       
+        // ✅ Fix: Ensure valid coordinates are stored
+        const shopLocation = {
+            type: "Point",
+            coordinates: Array.isArray(location?.coordinates) && location.coordinates.length === 2
+                ? location.coordinates  // Use provided coordinates
+                : [0, 0] // Default to [0,0] if location is missing
+        };
+
         await ShopKeeper.create({
             name,
             email,
             password: hashedPassword,
             shopName,
             address,
-            services: services || [], 
-            location: {
-                type: "Point",
-                coordinates: location?.coordinates || [0, 0], 
-            }
+            services: services || [],
+            location: shopLocation,  // ✅ Store proper location
         });
 
         res.status(201).json({ message: "User registered successfully" });

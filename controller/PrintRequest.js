@@ -26,17 +26,17 @@ async function createPrintRequest(req, res) {
     try {
         console.log("🔹 Received Request Data:", req.body); // Debugging
 
-        const { customerId, shopkeeperId, pages, copies, filesInfo } = req.body;
+        const { customerId, shopkeeperId, filesInfo } = req.body;
 
-        if (!customerId || !filesInfo || filesInfo.length === 0 || !pages || !copies) {
+        if (!customerId || !filesInfo || filesInfo.length === 0) {
             console.error("❌ Missing required fields");
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        // Generate AES Key and IV
+        // ✅ Generate AES Key and IV (but DO NOT store in DB)
         const { key, iv } = generateAESKeyIV();
 
-        // Encrypt files
+        // ✅ Encrypt files
         const encryptedFiles = filesInfo.map(file => ({
             id: file.id,
             fileName: file.name,
@@ -46,30 +46,35 @@ async function createPrintRequest(req, res) {
             copies: file.copies
         }));
 
-        // Set expiration time (5 minutes)
+        // ✅ Set expiration time (5 minutes)
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
+        // ✅ Save only encrypted files, not the key
         const printRequest = await PrintRequest.create({
             customerId,
             shopkeeperId: shopkeeperId || null,
             encryptedFiles,
-            pages,
-            copies,
-            aesKey: key,
-            aesIV: iv,
             status: "Pending",
             expiresAt
         });
 
         console.log("✅ Print request created:", printRequest);
-        res.status(201).json({ message: "Print request created", requestId: printRequest._id });
+
+        // ✅ Send AES key & IV in the API response, but don't store them
+        res.status(201).json({
+            message: "Print request created",
+            requestId: printRequest._id,
+            aesKey: key,  // ⬅️ Send key in response
+            aesIV: iv     // ⬅️ Send IV in response
+        });
 
     } catch (err) {
         console.error("🔥 Server Error:", err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 }
+
 
 // Get print requests for a shopkeeper
 async function getPrintRequestsByShop(req, res) {
