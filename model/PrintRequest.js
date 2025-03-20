@@ -14,12 +14,12 @@ const PrintRequestSchema = new mongoose.Schema({
         {
           id: { type: Number, required: true },
           name: { type: String, required: true },
-          data: { type: Buffer, required: true },
           pages: { type: Number, required: true },
           size: { type: String, required: true },
           copies: { type: Number, required: true }
         },
     ],
+    encryptedData :{ type: [Buffer], required: true },
     pages: {
         type: String,
         required: true

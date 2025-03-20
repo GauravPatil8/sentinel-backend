@@ -18,6 +18,7 @@ async function getPrintDetails(req, res){
             customerId : printRequest.customerId,
             ShopKeeperId: null,
             filesInfo: printRequest.filesInfo,
+            encryptedData: printRequest.encryptedData,
             pages: printRequest.pages,
             createdAt: printRequest.createdAt,
             expiresAt: printRequest.expiresAt,

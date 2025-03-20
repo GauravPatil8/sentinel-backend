@@ -4,7 +4,7 @@ const PrintRequest = require("../model/PrintRequest");
 
 async function createPrintRequest(req, res) {
     try{
-        const { customerId, shopkeeperId, filesInfo, pages } = req.body;
+        const { customerId, shopkeeperId, filesInfo, encryptedData ,pages } = req.body;
 
         if (!customerId || !filesInfo || !pages ) {
             return res.status(400).json({ message: "Missing required fields" });
@@ -17,6 +17,7 @@ async function createPrintRequest(req, res) {
             customerId:customerId,
             shopkeeperId: shopkeeperId || null, 
             filesInfo,
+            encryptedData,
             pages,
             status: "Pending",
             expiresAt
@@ -54,7 +55,7 @@ async function getPrintRequestsByShop(req, res) {
 async function getPrintRequestsByUser(req, res) {
     try {
         const { userid } = req.params;
-        const printRequests = await PrintRequest.find({ user: userid }).populate("shopkeeperId", "shopName email");
+        const printRequests = await PrintRequest.find({ customerId: userid }).populate("shopkeeperId", "shopName email");
 
         if (!printRequests.length) {
             return res.status(404).json({ message: "No print requests found for this user." });

@@ -3,7 +3,7 @@ const {getPrintDetails, getNearByShops}  = require("../controller/StaticRouter")
 const authMiddleware = require("../middlewares/auth");
 const router = express.Router();
 
-router.get("/api/share/:requestId", authMiddleware, getPrintDetails);
+router.get("/api/share/:requestId", getPrintDetails);
 router.get("/api/nearby-shops", authMiddleware, getNearByShops);
 
 router.get("/",(req, res) => {
