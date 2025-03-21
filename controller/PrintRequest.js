@@ -70,6 +70,7 @@ async function getPrintRequestsByUser(req, res) {
 
 async function getShareableLink(req, res){
     try{
+        console.log("request recieved")
         const { requestId } = req.params;
         const printRequest = await PrintRequest.findById(requestId);
 
@@ -83,7 +84,7 @@ async function getShareableLink(req, res){
 
         await printRequest.save();
 
-        const shareLink = `${req.protocol}://${req.get("host")}/share/${requestId}`;
+        const shareLink = `${req.get("origin")}/share/${requestId}`;
 
         res.json({ success: true, shareLink });
     } catch(err){

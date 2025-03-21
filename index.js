@@ -11,6 +11,7 @@ const authRouter = require("./routes/auth");
 const printRouter = require("./routes/printRequest");
 const historyRouter = require("./routes/documentHistory");
 const staticRouter = require("./routes/staticRouter");
+const whatsappRouter = require("./routes/whatsapp");
 const { initializeSocket } = require("./services/socketServices");
 const connectToMongo = require("./connect");
 
@@ -38,7 +39,7 @@ app.use("/", staticRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/print-requests", printRouter);
 app.use("/api/document-history", historyRouter);
-
+app.use("/whatsapp", whatsappRouter);
 initializeSocket(server);
 
 server.listen(PORT, () => console.log(`Server started at port: http://localhost:${PORT}/`));

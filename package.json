@@ -26,6 +26,8 @@
     "pdf-poppler": "^0.2.1",
     "pdfjs-dist": "^5.0.375",
     "sharp": "^0.33.5",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "tesseract.js": "^6.0.0",
+    "twilio": "^5.5.1"
   }
 }
